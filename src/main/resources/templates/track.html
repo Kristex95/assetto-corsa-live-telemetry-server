@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Track Visualization</title>
+</head>
+<body>
+<h1>Track Visualization</h1>
+<canvas id="trackCanvas" width="1200" height="800"
+        style="border:1px solid black; height: 100%;"></canvas>
+
+<script th:inline="javascript">
+    let nodes = [[${nodes}]]; // Thymeleaf injects data
+
+    let canvas = document.getElementById("trackCanvas");
+    let ctx = canvas.getContext("2d");
+
+    // Bounding box
+    let minX = Math.min(...nodes.map(n => n.x));
+    let maxX = Math.max(...nodes.map(n => n.x));
+    let minZ = Math.min(...nodes.map(n => n.z));
+    let maxZ = Math.max(...nodes.map(n => n.z));
+
+    let margin = 50;
+    let trackWidth = maxX - minX;
+    let trackHeight = maxZ - minZ;
+
+    let scaleX = (canvas.width - 2 * margin) / trackWidth;
+    let scaleY = (canvas.height - 2 * margin) / trackHeight;
+    let scale = Math.min(scaleX, scaleY);
+
+    let xOffset = (canvas.width - trackWidth * scale) / 2;
+    let yOffset = (canvas.height - trackHeight * scale) / 2;
+
+    ctx.lineWidth = 4;            // thickness in pixels
+    ctx.beginPath();
+    for (let i = 0; i < nodes.length; i++) {
+        let x = (nodes[i].x - minX) * scale + xOffset;
+        let y = (nodes[i].z - minZ) * scale + yOffset;
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+</script>
+
+</body>
+</html>
