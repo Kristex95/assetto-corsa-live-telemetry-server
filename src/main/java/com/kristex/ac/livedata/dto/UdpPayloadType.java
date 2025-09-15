@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum UdpPayloadType {
-	TRACK_NODE("track_node"), CARS_POSITION("cars_positions");
+	TRACK_NODE("track_node"), CARS_INFO("cars_info");
 
 	@JsonValue
 	private final String name;

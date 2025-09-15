@@ -6,10 +6,10 @@
 <body>
 <h1>Track Visualization</h1>
 <canvas id="trackCanvas" width="1200" height="800"
-        style="border:1px solid black; height: 100%;"></canvas>
+        style="border:1px solid black;"></canvas>
 
 <script th:inline="javascript">
-    let nodes = [[${nodes}]]; // Thymeleaf injects data
+    let nodes = [[${nodes}]];
 
     let canvas = document.getElementById("trackCanvas");
     let ctx = canvas.getContext("2d");
@@ -31,19 +31,48 @@
     let xOffset = (canvas.width - trackWidth * scale) / 2;
     let yOffset = (canvas.height - trackHeight * scale) / 2;
 
-    ctx.lineWidth = 4;            // thickness in pixels
-    ctx.beginPath();
-    for (let i = 0; i < nodes.length; i++) {
-        let x = (nodes[i].x - minX) * scale + xOffset;
-        let y = (nodes[i].z - minZ) * scale + yOffset;
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
+    // Draw track
+    function drawTrack() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "black";
+        ctx.beginPath();
+        nodes.forEach((n, i) => {
+            let x = (n.x - minX) * scale + xOffset;
+            let y = (n.z - minZ) * scale + yOffset;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
     }
-    ctx.stroke();
+
+    // Draw cars
+    function drawCars(cars) {
+        ctx.fillStyle = "red";
+        cars.forEach(car => {
+            if (car.id == 0) {
+                ctx.fillStyle = "green";
+            } else {
+                ctx.fillStyle = "red";
+            }
+            let x = (car.position.x - minX) * scale + xOffset;
+            let y = (car.position.z - minZ) * scale + yOffset;
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+    }
+
+    // WebSocket connection
+    let ws = new WebSocket("ws://localhost:8080/ws/cars");
+
+    ws.onmessage = function(event) {
+        drawTrack();
+        let cars = JSON.parse(event.data);
+        drawCars(cars);
+    };
 </script>
+
 
 </body>
 </html>

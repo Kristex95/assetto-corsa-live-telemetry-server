@@ -1,5 +1,6 @@
 package com.kristex.ac.livedata.controller;
 
+import com.kristex.ac.livedata.dto.CarInfo;
 import com.kristex.ac.livedata.dto.TrackNode;
 import com.kristex.ac.livedata.udp.UdpListener;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,10 @@ public class TrackController {
 
 	@GetMapping("/track")
 	public String track(Model model) {
-		List<TrackNode> nodes = udpListener.getTrackNodes();
+		final List<TrackNode> nodes = udpListener.getTrackNodes();
+		final List<CarInfo> cars = udpListener.getCars();
 		model.addAttribute("nodes", nodes);
+		model.addAttribute("cars", cars);
 		return "track";
 	}
 }

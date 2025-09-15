@@ -2,6 +2,7 @@ package com.kristex.ac.livedata.udp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kristex.ac.livedata.config.UdpProperties;
+import com.kristex.ac.livedata.dto.CarInfo;
 import com.kristex.ac.livedata.dto.TrackNode;
 import com.kristex.ac.livedata.dto.UdpMessage;
 import com.kristex.ac.livedata.dto.UdpPayloadType;
@@ -25,6 +26,8 @@ public class UdpListener {
 
 	@Getter
 	private final List<TrackNode> trackNodes = new CopyOnWriteArrayList<>();
+	@Getter
+	private final List<CarInfo> cars = new CopyOnWriteArrayList<>();
 
 	@PostConstruct
 	public void startListener() {
@@ -40,12 +43,20 @@ public class UdpListener {
 					try {
 						final UdpMessage udpMessage = objectMapper.readValue(json, UdpMessage.class);
 						if (udpMessage.getType() == UdpPayloadType.TRACK_NODE) {
-							final TrackNode trackNode = objectMapper.convertValue(udpMessage.getData(), TrackNode.class);
+							final TrackNode trackNode = udpMessage.getTrackNode();
 							if (trackNode.getIndex() == 0) {
 								trackNodes.clear();
 							}
 							trackNodes.add(trackNode);
 							System.out.println("Stored node #" + trackNode.getIndex() + " (x=" + trackNode.getX() + ")");
+						} else if (udpMessage.getType() == UdpPayloadType.CARS_INFO) {
+							final List<CarInfo> newCars = udpMessage.getCarInfos();
+							if (newCars != null) {
+								if (newCars.stream().anyMatch(car -> car.getId() == 0)) {
+									cars.clear();
+								}
+								cars.addAll(newCars);
+							}
 						}
 					} catch (Exception ex) {
 						System.err.println("Invalid JSON: " + json);
