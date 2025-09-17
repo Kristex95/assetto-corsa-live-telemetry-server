@@ -33,7 +33,7 @@ public class CarsInfoWebSocketHandler extends TextWebSocketHandler {
 	}
 
 	public void broadcastCars() {
-		List<CarInfo> carsSnapshot = new ArrayList<>(udpListener.getCars());
+		List<CarInfo> carsSnapshot = new ArrayList<>(udpListener.getCars().values());
 		if (carsSnapshot.isEmpty()) return;
 
 		try {
@@ -41,7 +41,6 @@ public class CarsInfoWebSocketHandler extends TextWebSocketHandler {
 			TextMessage textMessage = new TextMessage(message);
 			for (WebSocketSession session : sessions) {
 				if (session.isOpen()) {
-					System.out.println("message: " + message);
 					session.sendMessage(textMessage);
 				}
 			}

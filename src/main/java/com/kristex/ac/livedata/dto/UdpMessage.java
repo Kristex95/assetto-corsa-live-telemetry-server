@@ -32,4 +32,11 @@ public class UdpMessage {
 		}
 		return null;
 	}
+
+	public List<PlayerInfo> getPlayersInfo() {
+		if (type == UdpPayloadType.PLAYERS_INFO && data != null) {
+			return mapper.convertValue(data, mapper.getTypeFactory().constructCollectionType(List.class, PlayerInfo.class));
+		}
+		return null;
+	}
 }

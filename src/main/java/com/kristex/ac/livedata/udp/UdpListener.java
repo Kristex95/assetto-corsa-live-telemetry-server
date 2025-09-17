@@ -3,6 +3,7 @@ package com.kristex.ac.livedata.udp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kristex.ac.livedata.config.UdpProperties;
 import com.kristex.ac.livedata.dto.CarInfo;
+import com.kristex.ac.livedata.dto.PlayerInfo;
 import com.kristex.ac.livedata.dto.TrackNode;
 import com.kristex.ac.livedata.dto.UdpMessage;
 import com.kristex.ac.livedata.dto.UdpPayloadType;
@@ -15,6 +16,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
@@ -27,7 +30,9 @@ public class UdpListener {
 	@Getter
 	private final List<TrackNode> trackNodes = new CopyOnWriteArrayList<>();
 	@Getter
-	private final List<CarInfo> cars = new CopyOnWriteArrayList<>();
+	private final Map<Integer, CarInfo> cars = new ConcurrentHashMap<>();
+	@Getter
+	private final Map<Integer, PlayerInfo> players = new ConcurrentHashMap<>();
 
 	@PostConstruct
 	public void startListener() {
@@ -52,10 +57,25 @@ public class UdpListener {
 						} else if (udpMessage.getType() == UdpPayloadType.CARS_INFO) {
 							final List<CarInfo> newCars = udpMessage.getCarInfos();
 							if (newCars != null) {
-								if (newCars.stream().anyMatch(car -> car.getId() == 0)) {
-									cars.clear();
+								for (CarInfo car : newCars) {
+									if (car.isConnected()) {
+										cars.put(car.getId(), car);
+									} else {
+										cars.remove(car.getId());
+									}
 								}
-								cars.addAll(newCars);
+							}
+						} else if (udpMessage.getType() == UdpPayloadType.PLAYERS_INFO) {
+							final List<PlayerInfo> playersInfo = udpMessage.getPlayersInfo();
+							if (playersInfo != null) {
+								for (PlayerInfo player : playersInfo) {
+									if (player.isConnected()) {
+										players.put(player.getId(), player);
+										System.out.println(player);
+									} else {
+										players.remove(player.getId());
+									}
+								}
 							}
 						}
 					} catch (Exception ex) {

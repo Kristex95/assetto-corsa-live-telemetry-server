@@ -2,19 +2,58 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Track Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #trackCanvas {
+            border: 1px solid black;
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #aaa;
+            padding: 4px 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #eee;
+        }
+    </style>
 </head>
 <body>
 <h1>Track Visualization</h1>
-<canvas id="trackCanvas" width="1200" height="800"
-        style="border:1px solid black;"></canvas>
+<canvas id="trackCanvas" width="1200" height="800"></canvas>
+
+<h2>Players Info</h2>
+<table id="playersTable">
+    <thead>
+    <tr>
+        <th>Pos</th>
+        <th>Player Name</th>
+        <th>Car Name</th>
+        <th>Best Lap</th>
+        <th>Last Lap</th>
+        <th>Current Lap</th>
+        <th>In Pit</th>
+        <th>In Box</th>
+        <th>Realtime LB Pos</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
 
 <script th:inline="javascript">
+    // --- Track Nodes ---
     let nodes = [[${nodes}]];
 
     let canvas = document.getElementById("trackCanvas");
     let ctx = canvas.getContext("2d");
 
-    // Bounding box
     let minX = Math.min(...nodes.map(n => n.x));
     let maxX = Math.max(...nodes.map(n => n.x));
     let minZ = Math.min(...nodes.map(n => n.z));
@@ -31,10 +70,9 @@
     let xOffset = (canvas.width - trackWidth * scale) / 2;
     let yOffset = (canvas.height - trackHeight * scale) / 2;
 
-    // Draw track
     function drawTrack() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 12;
         ctx.strokeStyle = "black";
         ctx.beginPath();
         nodes.forEach((n, i) => {
@@ -48,13 +86,8 @@
 
     // Draw cars
     function drawCars(cars) {
-        ctx.fillStyle = "red";
         cars.forEach(car => {
-            if (car.id == 0) {
-                ctx.fillStyle = "green";
-            } else {
-                ctx.fillStyle = "red";
-            }
+            ctx.fillStyle = car.id === 0 ? "green" : "red";
             let x = (car.position.x - minX) * scale + xOffset;
             let y = (car.position.z - minZ) * scale + yOffset;
             ctx.beginPath();
@@ -63,16 +96,53 @@
         });
     }
 
-    // WebSocket connection
-    let ws = new WebSocket("ws://localhost:8080/ws/cars");
+    // --- Utility: format milliseconds to mm:ss.mmm ---
+    function formatTime(ms) {
+        if (!ms || ms <= 0) return "-";
+        let totalSeconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+        let milliseconds = ms % 1000;
+        return `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(milliseconds).padStart(3,'0')}`;
+    }
 
-    ws.onmessage = function(event) {
+    // --- WebSocket: Cars ---
+    let wsCars = new WebSocket("ws://<host:socket>/ws/cars");
+    wsCars.onmessage = function(event) {
         drawTrack();
         let cars = JSON.parse(event.data);
         drawCars(cars);
     };
+
+    // --- WebSocket: Players ---
+    let wsPlayers = new WebSocket("ws://<host:socket>/ws/players");
+    wsPlayers.onmessage = function(event) {
+        let players = JSON.parse(event.data);
+        players.sort((a, b) => {
+            let posA = a.leaderboard_pos || Infinity;
+            let posB = b.leaderboard_pos || Infinity;
+            return posA - posB;
+        });
+        let tbody = document.getElementById("playersTable").querySelector("tbody");
+        tbody.innerHTML = "";
+
+        players.forEach(player => {
+            console.log(player);
+            let row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${player.leaderboard_pos || ""}</td>
+                <td>${player.player_name}</td>
+                <td>${player.car_name || ""}</td>
+                <td>${formatTime(player.best_lap)}</td>
+                <td>${formatTime(player.last_lap)}</td>
+                <td>${formatTime(player.current_lap)}</td>
+                <td>${player.in_pit}</td>
+                <td>${player.in_box}</td>
+                <td>${player.realtime_leaderboard_pos || ""}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    };
 </script>
-
-
 </body>
 </html>

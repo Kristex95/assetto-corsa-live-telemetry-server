@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -19,7 +20,7 @@ public class TrackController {
 	@GetMapping("/track")
 	public String track(Model model) {
 		final List<TrackNode> nodes = udpListener.getTrackNodes();
-		final List<CarInfo> cars = udpListener.getCars();
+		final Map<Integer,CarInfo> cars = udpListener.getCars();
 		model.addAttribute("nodes", nodes);
 		model.addAttribute("cars", cars);
 		return "track";
