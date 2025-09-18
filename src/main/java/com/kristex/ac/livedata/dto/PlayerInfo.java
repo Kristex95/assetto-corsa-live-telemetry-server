@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlayerInfo {
@@ -13,11 +15,11 @@ public class PlayerInfo {
 	@JsonProperty("car_name")
 	private String carName;
 	@JsonProperty("best_lap")
-	private String bestLap;
+	private Long bestLap;
 	@JsonProperty("current_lap")
-	private String currentLap;
+	private Long currentLap;
 	@JsonProperty("last_lap")
-	private String lastLap;
+	private Long lastLap;
 	@JsonProperty("in_pit")
 	private boolean isInPit;
 	@JsonProperty("in_box")
@@ -28,4 +30,8 @@ public class PlayerInfo {
 	private Integer leaderboardPosition;
 	@JsonProperty("realtime_leaderboard_pos")
 	private Integer realTimeLeaderBoardPosition;
+	@JsonProperty("tyre_compound")
+	private String tyreCompound;
+	@JsonProperty("splits")
+	private List<Long> lastSplits;
 }

@@ -1,6 +1,7 @@
 package com.kristex.ac.livedata.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -10,6 +11,8 @@ public class CarInfo {
 	private String name;
 	private Position position;
 	private boolean isConnected;
+	@JsonProperty("best_lap")
+	private Long bestLap;
 
 	@Data
 	@JsonIgnoreProperties(ignoreUnknown = true)

@@ -21,8 +21,10 @@ public class TrackController {
 	public String track(Model model) {
 		final List<TrackNode> nodes = udpListener.getTrackNodes();
 		final Map<Integer,CarInfo> cars = udpListener.getCars();
+		final Integer splitsCount = udpListener.getPlayers().get(0).getLastSplits().size();
 		model.addAttribute("nodes", nodes);
 		model.addAttribute("cars", cars);
+		model.addAttribute("splitsCount", splitsCount);
 		return "track";
 	}
 }

@@ -44,7 +44,6 @@ public class UdpListener {
 					final DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 					socket.receive(packet);
 					final String json = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
-
 					try {
 						final UdpMessage udpMessage = objectMapper.readValue(json, UdpMessage.class);
 						if (udpMessage.getType() == UdpPayloadType.TRACK_NODE) {
@@ -71,7 +70,6 @@ public class UdpListener {
 								for (PlayerInfo player : playersInfo) {
 									if (player.isConnected()) {
 										players.put(player.getId(), player);
-										System.out.println(player);
 									} else {
 										players.remove(player.getId());
 									}
