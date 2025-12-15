@@ -1,0 +1,8 @@
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.col canvas {
+    max-width: 100%;
+}

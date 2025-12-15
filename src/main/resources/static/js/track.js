@@ -4,6 +4,8 @@ let ctx = canvas.getContext("2d");
 let margin = 50;
 let minX, maxX, minZ, maxZ, trackWidth, trackHeight, scale, xOffset, yOffset;
 
+let bestSplits = [];
+
 // Resize + recompute scale
 function resizeCanvas() {
     let parent = canvas.parentElement;
@@ -105,14 +107,14 @@ function formatTime(ms) {
 }
 
 // WebSocket: Cars
-let wsCars = new WebSocket("ws://<host:port>/ws/cars");
+let wsCars = new WebSocket("ws://176.37.181.137:44566/ws/cars");
 wsCars.onmessage = function(event) {
     let cars = JSON.parse(event.data);
     drawCars(cars);
 };
 
 // WebSocket: Players
-let wsPlayers = new WebSocket("ws://<host:port>/ws/players");
+let wsPlayers = new WebSocket("ws://176.37.181.137:44566/ws/players");
 wsPlayers.onmessage = function(event) {
     let players = JSON.parse(event.data);
     
@@ -136,17 +138,8 @@ wsPlayers.onmessage = function(event) {
 
     let bestLapTime = Math.min(...validBestLaps);
 
-    let bestSplits = [];
     players.forEach(player => {
-        if (player.splits && Array.isArray(player.splits)) {
-            player.splits.forEach((split, i) => {
-                if (split && split > 0) {
-                    if (bestSplits[i] === undefined || split < bestSplits[i]) {
-                        bestSplits[i] = split;
-                    }
-                }
-            });
-        }
+        writeBestSplit(player);
     });
 
     players.forEach(player => {
@@ -185,8 +178,7 @@ wsPlayers.onmessage = function(event) {
         if (player.splits && Array.isArray(player.splits)) {
             player.splits.forEach((split, i) => {
                 let splitDisplay = formatTime(split);
-                let splitClass = (split === bestSplits[i]) ? "bg-purple" : "";
-                html += `<td class="${splitClass}">${splitDisplay}</td>`;
+                html += `<td>${splitDisplay}</td>`;
             });
         }
 
@@ -195,3 +187,124 @@ wsPlayers.onmessage = function(event) {
     });
 
 };
+
+function writeBestSplit(player) {
+    if (!Array.isArray(player.splits)) return;
+
+    player.splits.forEach((split, i) => {
+        if (!split || split <= 0) return;
+
+        if (!bestSplits[i]) {
+            bestSplits[i] = {
+                first: null,
+                second: null
+            };
+        }
+
+        const entry = bestSplits[i];
+
+        // 🥇 FIRST BEST
+        if (
+            !entry.first ||
+            split < entry.first.time
+        ) {
+            // Only shift to second if it's a DIFFERENT player
+            if (
+                entry.first &&
+                entry.first.playerId !== player.id &&
+                (
+                    !entry.second ||
+                    entry.first.time < entry.second.time
+                )
+            ) {
+                entry.second = entry.first;
+            }
+
+            entry.first = {
+                time: split,
+                playerId: player.id
+            };
+            displayBestSplits()
+        }
+
+        // 🥈 SECOND BEST
+        else if (
+            entry.first.playerId !== player.id &&
+            (
+                !entry.second ||
+                split < entry.second.time
+            )
+        ) {
+            entry.second = {
+                time: split,
+                playerId: player.id
+            };
+            displayBestSplits()
+        }
+    });
+}
+
+function displayBestSplits() {
+    const container = document.getElementById("fastest-sectors");
+    if (!container) return;
+
+    // Clear previous content
+    container.innerHTML = "";
+
+    const table = document.createElement("table");
+    table.className = "best-sectors-table table table-dark table-striped table-hover";
+
+    // ----- Header -----
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+
+    bestSplits.forEach((_, i) => {
+        const thId = document.createElement("th");
+        thId.textContent = "Num";
+
+        const thTime = document.createElement("th");
+        thTime.textContent = `S${i + 1}`;
+
+        headerRow.appendChild(thId);
+        headerRow.appendChild(thTime);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // ----- Body -----
+    const tbody = document.createElement("tbody");
+
+    // Create TWO rows total
+    const rowFirst = document.createElement("tr");
+    const rowSecond = document.createElement("tr");
+
+    bestSplits.forEach(sector => {
+        // ----- FIRST BEST -----
+        if (sector?.first) {
+            rowFirst.innerHTML += `
+                <td>${sector.first.playerId}</td>
+                <td>${formatTime(sector.first.time)}</td>
+            `;
+        } else {
+            rowFirst.innerHTML += `<td>-</td><td>-</td>`;
+        }
+
+        // ----- SECOND BEST -----
+        if (sector?.second) {
+            rowSecond.innerHTML += `
+                <td>${sector.second.playerId}</td>
+                <td>${formatTime(sector.second.time)}</td>
+            `;
+        } else {
+            rowSecond.innerHTML += `<td>-</td><td>-</td>`;
+        }
+    });
+
+    // Append rows ONCE
+    tbody.appendChild(rowFirst);
+    tbody.appendChild(rowSecond);
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
