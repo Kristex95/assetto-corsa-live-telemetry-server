@@ -107,14 +107,14 @@ function formatTime(ms) {
 }
 
 // WebSocket: Cars
-let wsCars = new WebSocket("ws://176.37.181.137:44566/ws/cars");
+let wsCars = new WebSocket("ws://localhost:8080/ws/cars");
 wsCars.onmessage = function(event) {
     let cars = JSON.parse(event.data);
     drawCars(cars);
 };
 
 // WebSocket: Players
-let wsPlayers = new WebSocket("ws://176.37.181.137:44566/ws/players");
+let wsPlayers = new WebSocket("ws://localhost:8080/ws/players");
 wsPlayers.onmessage = function(event) {
     let players = JSON.parse(event.data);
     
