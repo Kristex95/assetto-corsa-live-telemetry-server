@@ -7,6 +7,7 @@
       integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="/css/track.css">
     <title>Live Track</title>
     <style>
       body {
@@ -59,11 +60,13 @@
         </div>
         <div class="col">
           <canvas id="trackCanvas" width="100%" height="auto"></canvas>
+          <div id="fastest-sectors"></div>
         </div>
       </div>
     </div>
     <script th:inline="javascript">
       const nodes = [[${nodes}]];
+      const port = [[${port}]];
     </script>
     <script src="/js/track.js"></script>
     <script
